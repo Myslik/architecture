@@ -1,5 +1,6 @@
 ﻿using Architecture.Core;
 using System;
+using System.Reflection;
 
 namespace Architecture.UnitTests
 {
@@ -22,15 +23,23 @@ namespace Architecture.UnitTests
             _implementations = implementations;
         }
 
-        public object Create(Type serviceType)
+        public object Create(Type type)
         {
-            if (serviceType == _service)
+            if (type == _service)
             {
                 if (_implementations.Length != 1)
                 {
                     return null;
                 }
-                return Activator.CreateInstance(_implementations[0]);
+                try
+                {
+                    object implementation = Activator.CreateInstance(_implementations[0]);
+                    return implementation;
+                }
+                catch (TargetInvocationException ex) when (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
             }
             else
             {
@@ -38,13 +47,13 @@ namespace Architecture.UnitTests
             }
         }
 
-        public object[] CreateMany(Type serviceType)
+        public object[] CreateMany(Type type)
         {
-            if (serviceType == _service)
+            if (type == _service)
             {
                 var length = _implementations.Length;
                 var instances = new object[length];
-                for(var i = 0; i < length; i++)
+                for (var i = 0; i < length; i++)
                 {
                     instances[i] = Activator.CreateInstance(_implementations[i]);
                 }

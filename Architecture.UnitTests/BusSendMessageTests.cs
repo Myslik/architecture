@@ -1,6 +1,5 @@
 ﻿using Architecture.Core;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -43,7 +42,7 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 typeof(FailingMessageHandler));
             var bus = new Bus(handlerFactory);
-            await Assert.ThrowsAsync<TargetInvocationException>(
+            await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleMessage()));
         }
 
@@ -54,7 +53,7 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 new[] { typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler) });
             var bus = new Bus(handlerFactory);
-            await Assert.ThrowsAsync<TargetInvocationException>(
+            await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleMessage()));
         }
 

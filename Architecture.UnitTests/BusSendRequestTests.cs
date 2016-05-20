@@ -1,6 +1,5 @@
 ﻿using Architecture.Core;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -36,7 +35,7 @@ namespace Architecture.UnitTests
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(FailingRequestHandler));
             var bus = new Bus(handlerFactory);
-            await Assert.ThrowsAsync<TargetInvocationException>(
+            await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest()));
         }
 
@@ -47,7 +46,7 @@ namespace Architecture.UnitTests
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(BadRequestHandler));
             var bus = new Bus(handlerFactory);
-            await Assert.ThrowsAsync<InvalidOperationException>(
+            await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest()));
         }
 

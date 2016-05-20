@@ -4,7 +4,7 @@ namespace Architecture.Core
 {
     public interface IHandlerFactory
     {
-        object Create(Type serviceType);
-        object[] CreateMany(Type serviceType);
+        object Create(Type type);
+        object[] CreateMany(Type type);
     }
 }

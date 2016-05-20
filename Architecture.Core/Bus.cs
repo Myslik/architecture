@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Architecture.Core
@@ -9,51 +8,114 @@ namespace Architecture.Core
     {
         private const string HANDLER_NOT_FOUND =
             "Handler was not found for request of type ";
-        private readonly IHandlerFactory _handlerFactory;
+        private readonly HandlerFactory _handlerFactory;
 
         public Bus(IHandlerFactory handlerFactory)
         {
-            _handlerFactory = handlerFactory;
+            _handlerFactory = new HandlerFactory(handlerFactory);
         }
 
         public async Task Send(IMessage message)
         {
-            var handlerType = typeof(IMessageHandler<>).MakeGenericType(message.GetType());
-            object[] handlers = _handlerFactory.CreateMany(handlerType);
-            if (handlers != null)
+            var messageType = message.GetType();
+            var handlers = _handlerFactory.CreateMessageHandlers(messageType);
+            foreach(var handler in handlers)
             {
-                var tasks = new List<Task>();
-                string methodName = nameof(IMessageHandler<IMessage>.Handle);
-                MethodInfo methodInfo = handlerType.GetMethod(methodName);
-                foreach (var handler in handlers)
-                {
-                    var task = (Task)methodInfo.Invoke(handler, new[] { message });
-                    await task;
-                }
+                var wrapper = WrapMessageHandler(messageType, handler);
+                await wrapper.Handle(message);
             }
         }
 
         public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
-            var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
-            object handler;
-            try
+            var requestType = request.GetType();
+            var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
+            if (handler == null)
             {
-                handler = _handlerFactory.Create(handlerType);
+                throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType());
+            }
+            var wrapper = WrapRequestHandler<TResponse>(requestType, handler);
+            return await wrapper.Handle(request);
+        }
 
-                if (handler == null)
-                {
-                    throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType());
-                }
-            }
-            catch (Exception ex)
+        private MessageHandler WrapMessageHandler(Type messageType, object handler)
+        {
+            var wrapperType = typeof(MessageHandler<>).MakeGenericType(messageType);
+            return (MessageHandler)Activator.CreateInstance(wrapperType, handler);
+        }
+
+        private RequestHandler<TResponse> WrapRequestHandler<TResponse>(Type requestType, object handler)
+        {
+            var wrapperType = typeof(RequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+            return (RequestHandler<TResponse>)Activator.CreateInstance(wrapperType, handler);
+        }
+
+        private abstract class MessageHandler
+        {
+            public abstract Task Handle(IMessage message);
+        }
+
+        private sealed class MessageHandler<TMessage> : MessageHandler
+            where TMessage : IMessage
+        {
+            private readonly IMessageHandler<TMessage> _inner;
+
+            public MessageHandler(IMessageHandler<TMessage> inner)
             {
-                throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType(), ex);
+                _inner = inner;
             }
-            string methodName = nameof(IRequestHandler<IRequest<TResponse>, TResponse>.Handle);
-            MethodInfo methodInfo = handlerType.GetMethod(methodName);
-            var task = (Task<TResponse>)methodInfo.Invoke(handler, new[] { request });
-            return await task;
+
+            [DebuggerStepThrough, DebuggerHidden]
+            public override async Task Handle(IMessage message)
+            {
+                await _inner.Handle((TMessage)message);
+            }
+        }
+
+        private abstract class RequestHandler<TResponse>
+        {
+            public abstract Task<TResponse> Handle(IRequest<TResponse> request);
+        }
+
+        private sealed class RequestHandler<TRequest, TResponse> : RequestHandler<TResponse>
+            where TRequest : IRequest<TResponse>
+        {
+            private readonly IRequestHandler<TRequest, TResponse> _inner;
+
+            public RequestHandler(IRequestHandler<TRequest, TResponse> inner)
+            {
+                _inner = inner;
+            }
+
+            [DebuggerStepThrough, DebuggerHidden]
+            public override async Task<TResponse> Handle(IRequest<TResponse> request)
+            {
+                return await _inner.Handle((TRequest)request);
+            }
+        }
+
+        private sealed class HandlerFactory
+        {
+            private readonly IHandlerFactory _handlerFactory;
+
+            public HandlerFactory(IHandlerFactory handlerFactory)
+            {
+                _handlerFactory = handlerFactory;
+            }
+
+            [DebuggerStepThrough, DebuggerHidden]
+            public object[] CreateMessageHandlers(Type messageType)
+            {
+                var serviceType = typeof(IMessageHandler<>).MakeGenericType(messageType);
+                return _handlerFactory.CreateMany(serviceType);
+            }
+
+            [DebuggerStepThrough, DebuggerHidden]
+            public object CreateRequestHandler<TResponse>(Type requestType)
+            {
+                var serviceType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+                return _handlerFactory.Create(serviceType);
+            }
         }
     }
 }
