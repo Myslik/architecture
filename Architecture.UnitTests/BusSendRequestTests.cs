@@ -1,5 +1,7 @@
 ﻿using Architecture.Core;
 using System;
+using System.Reflection;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Architecture.UnitTests
@@ -7,45 +9,45 @@ namespace Architecture.UnitTests
     public class BusSendRequestTests
     {
         [Fact]
-        public void SendTest()
+        public async void SendTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(SimpleRequestHandler));
             var bus = new Bus(handlerFactory);
-            var response = bus.Send(new SimpleRequest());
+            var response = await bus.Send(new SimpleRequest());
             Assert.NotNull(response);
             Assert.IsType<SimpleResponse>(response);
         }
 
         [Fact]
-        public void SendWithoutHandlerTest()
+        public async void SendWithoutHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
             var bus = new Bus(handlerFactory);
-            Assert.Throws<InvalidOperationException>(
+            await Assert.ThrowsAsync<InvalidOperationException>(
                 () => bus.Send(new RequestWithoutHandler()));
         }
 
         [Fact]
-        public void SendWithFailingHandlerTest()
+        public async void SendWithFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(FailingRequestHandler));
             var bus = new Bus(handlerFactory);
-            Assert.Throws<NotImplementedException>(
+            await Assert.ThrowsAsync<TargetInvocationException>(
                 () => bus.Send(new SimpleRequest()));
         }
 
         [Fact]
-        public void SendWithBadHandlerTest()
+        public async void SendWithBadHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(BadRequestHandler));
             var bus = new Bus(handlerFactory);
-            Assert.Throws<InvalidOperationException>(
+            await Assert.ThrowsAsync<InvalidOperationException>(
                 () => bus.Send(new SimpleRequest()));
         }
 
@@ -58,9 +60,9 @@ namespace Architecture.UnitTests
         private class SimpleRequestHandler : 
             IRequestHandler<SimpleRequest, SimpleResponse>
         {
-            public SimpleResponse Handle(SimpleRequest request)
+            public Task<SimpleResponse> Handle(SimpleRequest request)
             {
-                return new SimpleResponse();
+                return Task.FromResult(new SimpleResponse());
             }
         }
 
@@ -75,7 +77,7 @@ namespace Architecture.UnitTests
         private class FailingRequestHandler:
             IRequestHandler<SimpleRequest, SimpleResponse>
         {
-            public SimpleResponse Handle(SimpleRequest request)
+            public Task<SimpleResponse> Handle(SimpleRequest request)
             {
                 throw new NotImplementedException();
             }

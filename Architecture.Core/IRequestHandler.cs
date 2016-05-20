@@ -1,8 +1,10 @@
-﻿namespace Architecture.Core
+﻿using System.Threading.Tasks;
+
+namespace Architecture.Core
 {
-    public interface IRequestHandler<in TRequest, out TResponse>
+    public interface IRequestHandler<in TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        TResponse Handle(TRequest request);
+        Task<TResponse> Handle(TRequest request);
     }
 }

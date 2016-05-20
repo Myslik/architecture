@@ -33,7 +33,7 @@ namespace Architecture.Core
             }
         }
 
-        public TResponse Send<TResponse>(IRequest<TResponse> request)
+        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
             object handler;
@@ -52,14 +52,8 @@ namespace Architecture.Core
             }
             string methodName = nameof(IRequestHandler<IRequest<TResponse>, TResponse>.Handle);
             MethodInfo methodInfo = handlerType.GetMethod(methodName);
-            try
-            {
-                return (TResponse)methodInfo.Invoke(handler, new[] { request });
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            {
-                throw ex.InnerException;
-            }
+            var task = (Task<TResponse>)methodInfo.Invoke(handler, new[] { request });
+            return await task;
         }
     }
 }

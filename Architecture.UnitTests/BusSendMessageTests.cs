@@ -1,5 +1,6 @@
 ﻿using Architecture.Core;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -8,55 +9,53 @@ namespace Architecture.UnitTests
     public class BusSendMessageTests
     {
         [Fact]
-        public void SendTest()
+        public async void SendTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IMessageHandler<SimpleMessage>),
                 typeof(SimpleMessageHandler));
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage()).Wait();
+            await bus.Send(new SimpleMessage());
         }
 
         [Fact]
-        public void SendWithoutHandlerTest()
+        public async void SendWithoutHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage()).Wait();
+            await bus.Send(new SimpleMessage());
         }
 
         [Fact]
-        public void SendWithMultipleHandlersTest()
+        public async void SendWithMultipleHandlersTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IMessageHandler<SimpleMessage>),
                 new[] { typeof(SimpleMessageHandler), typeof(AnotherMessageHandler) });
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage()).Wait();
+            await bus.Send(new SimpleMessage());
         }
 
         [Fact]
-        public void SendWithFailingHandlerTest()
+        public async void SendWithFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IMessageHandler<SimpleMessage>),
                 typeof(FailingMessageHandler));
             var bus = new Bus(handlerFactory);
-            var task = bus.Send(new SimpleMessage());
-            Assert.Throws<AggregateException>(
-                () => task.Wait());
+            await Assert.ThrowsAsync<TargetInvocationException>(
+                () => bus.Send(new SimpleMessage()));
         }
 
         [Fact]
-        public void SendWithMultipleFailingHandlerTest()
+        public async void SendWithMultipleFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory(
                 typeof(IMessageHandler<SimpleMessage>),
                 new[] { typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler) });
             var bus = new Bus(handlerFactory);
-            var task = bus.Send(new SimpleMessage());
-            Assert.Throws<AggregateException>(
-                () => task.Wait());
+            await Assert.ThrowsAsync<TargetInvocationException>(
+                () => bus.Send(new SimpleMessage()));
         }
 
         private class SimpleMessage : IMessage { }
