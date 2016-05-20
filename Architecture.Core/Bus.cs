@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Architecture.Core
 {
@@ -15,33 +16,19 @@ namespace Architecture.Core
             _handlerFactory = handlerFactory;
         }
 
-        public void Send(IMessage message)
+        public async Task Send(IMessage message)
         {
             var handlerType = typeof(IMessageHandler<>).MakeGenericType(message.GetType());
             object[] handlers = _handlerFactory.CreateMany(handlerType);
             if (handlers != null)
             {
-                var exceptions = new List<Exception>();
+                var tasks = new List<Task>();
                 string methodName = nameof(IMessageHandler<IMessage>.Handle);
                 MethodInfo methodInfo = handlerType.GetMethod(methodName);
                 foreach (var handler in handlers)
                 {
-                    try
-                    {
-                        methodInfo.Invoke(handler, new[] { message });
-                    }
-                    catch (TargetInvocationException ex) when (ex.InnerException != null)
-                    {
-                        exceptions.Add(ex.InnerException);
-                    }
-                }
-                if (exceptions.Count == 1)
-                {
-                    throw exceptions[0];
-                }
-                else if (exceptions.Count > 1)
-                {
-                    throw new AggregateException(exceptions);
+                    var task = (Task)methodInfo.Invoke(handler, new[] { message });
+                    await task;
                 }
             }
         }

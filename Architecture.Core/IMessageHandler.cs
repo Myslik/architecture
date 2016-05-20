@@ -1,8 +1,10 @@
-﻿namespace Architecture.Core
+﻿using System.Threading.Tasks;
+
+namespace Architecture.Core
 {
     public interface IMessageHandler<in TMessage>
         where TMessage : IMessage
     {
-        void Handle(TMessage message);
+        Task Handle(TMessage message);
     }
 }

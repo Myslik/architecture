@@ -1,8 +1,5 @@
 ﻿using Architecture.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -17,7 +14,7 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 typeof(SimpleMessageHandler));
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage());
+            bus.Send(new SimpleMessage()).Wait();
         }
 
         [Fact]
@@ -25,7 +22,7 @@ namespace Architecture.UnitTests
         {
             var handlerFactory = new SimpleHandlerFactory();
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage());
+            bus.Send(new SimpleMessage()).Wait();
         }
 
         [Fact]
@@ -35,7 +32,7 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 new[] { typeof(SimpleMessageHandler), typeof(AnotherMessageHandler) });
             var bus = new Bus(handlerFactory);
-            bus.Send(new SimpleMessage());
+            bus.Send(new SimpleMessage()).Wait();
         }
 
         [Fact]
@@ -45,8 +42,9 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 typeof(FailingMessageHandler));
             var bus = new Bus(handlerFactory);
-            Assert.Throws<NotImplementedException>(
-                () => bus.Send(new SimpleMessage()));
+            var task = bus.Send(new SimpleMessage());
+            Assert.Throws<AggregateException>(
+                () => task.Wait());
         }
 
         [Fact]
@@ -56,31 +54,32 @@ namespace Architecture.UnitTests
                 typeof(IMessageHandler<SimpleMessage>),
                 new[] { typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler) });
             var bus = new Bus(handlerFactory);
+            var task = bus.Send(new SimpleMessage());
             Assert.Throws<AggregateException>(
-                () => bus.Send(new SimpleMessage()));
+                () => task.Wait());
         }
 
         private class SimpleMessage : IMessage { }
 
         private class SimpleMessageHandler : IMessageHandler<SimpleMessage>
         {
-            public void Handle(SimpleMessage message)
+            public Task Handle(SimpleMessage message)
             {
-
+                return Task.FromResult(0);
             }
         }
 
         private class AnotherMessageHandler : IMessageHandler<SimpleMessage>
         {
-            public void Handle(SimpleMessage message)
+            public Task Handle(SimpleMessage message)
             {
-
+                return Task.FromResult(0);
             }
         }
 
         private class FailingMessageHandler: IMessageHandler<SimpleMessage>
         {
-            public void Handle(SimpleMessage message)
+            public Task Handle(SimpleMessage message)
             {
                 throw new NotImplementedException();
             }
@@ -88,7 +87,7 @@ namespace Architecture.UnitTests
 
         private class AnotherFailingMessageHandler : IMessageHandler<SimpleMessage>
         {
-            public void Handle(SimpleMessage message)
+            public Task Handle(SimpleMessage message)
             {
                 throw new NotImplementedException();
             }

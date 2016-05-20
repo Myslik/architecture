@@ -1,8 +1,10 @@
-﻿namespace Architecture.Core
+﻿using System.Threading.Tasks;
+
+namespace Architecture.Core
 {
     public interface IBus
     {
-        void Send(IMessage message);
+        Task Send(IMessage message);
         TResponse Send<TResponse>(IRequest<TResponse> request);
     }
 }
