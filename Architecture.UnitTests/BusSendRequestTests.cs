@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Architecture.UnitTests
 {
-    public class BusTests
+    public class BusSendRequestTests
     {
         [Fact]
         public void SendTest()
@@ -78,32 +78,6 @@ namespace Architecture.UnitTests
             public SimpleResponse Handle(SimpleRequest request)
             {
                 throw new NotImplementedException();
-            }
-        }
-
-        private class SimpleHandlerFactory : IHandlerFactory
-        {
-            private readonly Type _service;
-            private readonly Type _impl;
-
-            public SimpleHandlerFactory() { }
-
-            public SimpleHandlerFactory(Type service, Type impl)
-            {
-                _service = service;
-                _impl = impl;
-            }
-
-            public object Create(Type serviceType)
-            {
-                if (serviceType == _service)
-                {
-                    return Activator.CreateInstance(_impl);
-                }
-                else
-                {
-                    return null;
-                }
             }
         }
     }

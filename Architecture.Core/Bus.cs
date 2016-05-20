@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Architecture.Core
@@ -12,6 +13,37 @@ namespace Architecture.Core
         public Bus(IHandlerFactory handlerFactory)
         {
             _handlerFactory = handlerFactory;
+        }
+
+        public void Send(IMessage message)
+        {
+            var handlerType = typeof(IMessageHandler<>).MakeGenericType(message.GetType());
+            object[] handlers = _handlerFactory.CreateMany(handlerType);
+            if (handlers != null)
+            {
+                var exceptions = new List<Exception>();
+                string methodName = nameof(IMessageHandler<IMessage>.Handle);
+                MethodInfo methodInfo = handlerType.GetMethod(methodName);
+                foreach (var handler in handlers)
+                {
+                    try
+                    {
+                        methodInfo.Invoke(handler, new[] { message });
+                    }
+                    catch (TargetInvocationException ex) when (ex.InnerException != null)
+                    {
+                        exceptions.Add(ex.InnerException);
+                    }
+                }
+                if (exceptions.Count == 1)
+                {
+                    throw exceptions[0];
+                }
+                else if (exceptions.Count > 1)
+                {
+                    throw new AggregateException(exceptions);
+                }
+            }
         }
 
         public TResponse Send<TResponse>(IRequest<TResponse> request)
