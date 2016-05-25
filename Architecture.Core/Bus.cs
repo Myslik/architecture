@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Architecture.Core
@@ -15,18 +16,18 @@ namespace Architecture.Core
             _handlerFactory = new HandlerFactory(handlerFactory);
         }
 
-        public async Task Send(IMessage message)
+        public async Task Send(IMessage message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
             var handlers = _handlerFactory.CreateMessageHandlers(messageType);
             foreach(var handler in handlers)
             {
                 var wrapper = WrapMessageHandler(messageType, handler);
-                await wrapper.Handle(message);
+                await wrapper.Handle(message, cancellationToken);
             }
         }
 
-        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
             var requestType = request.GetType();
             var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
@@ -35,7 +36,7 @@ namespace Architecture.Core
                 throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType());
             }
             var wrapper = WrapRequestHandler<TResponse>(requestType, handler);
-            return await wrapper.Handle(request);
+            return await wrapper.Handle(request, cancellationToken);
         }
 
         private MessageHandler WrapMessageHandler(Type messageType, object handler)
@@ -52,7 +53,7 @@ namespace Architecture.Core
 
         private abstract class MessageHandler
         {
-            public abstract Task Handle(IMessage message);
+            public abstract Task Handle(IMessage message, CancellationToken cancellationToken);
         }
 
         private sealed class MessageHandler<TMessage> : MessageHandler
@@ -66,15 +67,15 @@ namespace Architecture.Core
             }
 
             [DebuggerStepThrough, DebuggerHidden]
-            public override async Task Handle(IMessage message)
+            public override async Task Handle(IMessage message, CancellationToken cancellationToken)
             {
-                await _inner.Handle((TMessage)message);
+                await _inner.Handle((TMessage)message, cancellationToken);
             }
         }
 
         private abstract class RequestHandler<TResponse>
         {
-            public abstract Task<TResponse> Handle(IRequest<TResponse> request);
+            public abstract Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken);
         }
 
         private sealed class RequestHandler<TRequest, TResponse> : RequestHandler<TResponse>
@@ -88,9 +89,9 @@ namespace Architecture.Core
             }
 
             [DebuggerStepThrough, DebuggerHidden]
-            public override async Task<TResponse> Handle(IRequest<TResponse> request)
+            public override async Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken)
             {
-                return await _inner.Handle((TRequest)request);
+                return await _inner.Handle((TRequest)request, cancellationToken);
             }
         }
 
