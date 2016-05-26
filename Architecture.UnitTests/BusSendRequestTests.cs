@@ -1,5 +1,6 @@
 ﻿using Architecture.Core;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -14,7 +15,7 @@ namespace Architecture.UnitTests
                 typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
                 typeof(SimpleRequestHandler));
             var bus = new Bus(handlerFactory);
-            var response = await bus.Send(new SimpleRequest());
+            var response = await bus.Send(new SimpleRequest(), CancellationToken.None);
             Assert.NotNull(response);
             Assert.IsType<SimpleResponse>(response);
         }
@@ -25,7 +26,7 @@ namespace Architecture.UnitTests
             var handlerFactory = new SimpleHandlerFactory();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => bus.Send(new RequestWithoutHandler()));
+                () => bus.Send(new RequestWithoutHandler(), CancellationToken.None));
         }
 
         [Fact]
@@ -36,7 +37,7 @@ namespace Architecture.UnitTests
                 typeof(FailingRequestHandler));
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
-                () => bus.Send(new SimpleRequest()));
+                () => bus.Send(new SimpleRequest(), CancellationToken.None));
         }
 
         [Fact]
@@ -47,7 +48,7 @@ namespace Architecture.UnitTests
                 typeof(BadRequestHandler));
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
-                () => bus.Send(new SimpleRequest()));
+                () => bus.Send(new SimpleRequest(), CancellationToken.None));
         }
 
         private class RequestWithoutHandler : IRequest<SimpleResponse> { }
@@ -59,7 +60,7 @@ namespace Architecture.UnitTests
         private class SimpleRequestHandler : 
             IRequestHandler<SimpleRequest, SimpleResponse>
         {
-            public Task<SimpleResponse> Handle(SimpleRequest request)
+            public Task<SimpleResponse> Handle(SimpleRequest request, CancellationToken cancellationToken)
             {
                 return Task.FromResult(new SimpleResponse());
             }
@@ -76,7 +77,7 @@ namespace Architecture.UnitTests
         private class FailingRequestHandler:
             IRequestHandler<SimpleRequest, SimpleResponse>
         {
-            public Task<SimpleResponse> Handle(SimpleRequest request)
+            public Task<SimpleResponse> Handle(SimpleRequest request, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
