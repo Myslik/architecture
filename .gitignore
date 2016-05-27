@@ -243,3 +243,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+*.v2.ncrunchproject
+*.v2.ncrunchsolution

@@ -1,6 +1,7 @@
 ﻿using Architecture.Core;
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace Architecture.UnitTests
 {
@@ -47,7 +48,7 @@ namespace Architecture.UnitTests
             }
         }
 
-        public object[] CreateMany(Type type)
+        public IEnumerable<object> CreateMany(Type type)
         {
             if (type == _service)
             {

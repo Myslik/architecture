@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,7 +106,7 @@ namespace Architecture.Core
             }
 
             [DebuggerStepThrough, DebuggerHidden]
-            public object[] CreateMessageHandlers(Type messageType)
+            public IEnumerable<object> CreateMessageHandlers(Type messageType)
             {
                 var serviceType = typeof(IMessageHandler<>).MakeGenericType(messageType);
                 return _handlerFactory.CreateMany(serviceType);
