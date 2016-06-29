@@ -8,7 +8,7 @@ namespace Architecture.Core
     public partial class Bus
     {
         [DebuggerStepThrough, DebuggerHidden]
-        public async Task Send(IMessage message, CancellationToken cancellationToken)
+        public virtual async Task Send(IMessage message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
             var handlers = _handlerFactory.CreateMessageHandlers(messageType);

@@ -8,7 +8,7 @@ namespace Architecture.Core
     public partial class Bus
     {
         [DebuggerStepThrough, DebuggerHidden]
-        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
+        public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
             var requestType = request.GetType();
             var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
