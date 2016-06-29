@@ -17,7 +17,7 @@ namespace Architecture.Core
             _handlerFactory = new HandlerFactory(handlerFactory);
         }
 
-        public async Task Send(IMessage message, CancellationToken cancellationToken)
+        public virtual async Task Send(IMessage message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
             var handlers = _handlerFactory.CreateMessageHandlers(messageType);
@@ -28,7 +28,7 @@ namespace Architecture.Core
             }
         }
 
-        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
+        public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
             var requestType = request.GetType();
             var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
