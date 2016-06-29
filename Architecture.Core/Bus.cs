@@ -40,13 +40,13 @@ namespace Architecture.Core
             return await wrapper.Handle(request, cancellationToken);
         }
 
-        private MessageHandler WrapMessageHandler(Type messageType, object handler)
+        private static MessageHandler WrapMessageHandler(Type messageType, object handler)
         {
             var wrapperType = typeof(MessageHandler<>).MakeGenericType(messageType);
             return (MessageHandler)Activator.CreateInstance(wrapperType, handler);
         }
 
-        private RequestHandler<TResponse> WrapRequestHandler<TResponse>(Type requestType, object handler)
+        private static RequestHandler<TResponse> WrapRequestHandler<TResponse>(Type requestType, object handler)
         {
             var wrapperType = typeof(RequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
             return (RequestHandler<TResponse>)Activator.CreateInstance(wrapperType, handler);

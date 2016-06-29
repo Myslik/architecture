@@ -6,6 +6,8 @@ namespace Architecture.Core
     public interface IRequestHandler<in TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default(CancellationToken));
+        Task<TResponse> Handle(
+            TRequest request, 
+            CancellationToken cancellationToken = default(CancellationToken));
     }
 }
