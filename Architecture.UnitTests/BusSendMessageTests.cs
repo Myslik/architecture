@@ -11,9 +11,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IMessageHandler<SimpleMessage>),
-                typeof(SimpleMessageHandler));
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IMessageHandler<SimpleMessage>, SimpleMessageHandler>();
             var bus = new Bus(handlerFactory);
             await bus.Send(new SimpleMessage(), CancellationToken.None);
         }
@@ -29,9 +28,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendWithMultipleHandlersTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IMessageHandler<SimpleMessage>),
-                new[] { typeof(SimpleMessageHandler), typeof(AnotherMessageHandler) });
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IMessageHandler<SimpleMessage>>(typeof(SimpleMessageHandler), typeof(AnotherMessageHandler));
             var bus = new Bus(handlerFactory);
             await bus.Send(new SimpleMessage(), CancellationToken.None);
         }
@@ -39,9 +37,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendWithFailingHandlerTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IMessageHandler<SimpleMessage>),
-                typeof(FailingMessageHandler));
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IMessageHandler<SimpleMessage>, FailingMessageHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleMessage(), CancellationToken.None));
@@ -50,9 +47,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendWithMultipleFailingHandlerTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IMessageHandler<SimpleMessage>),
-                new[] { typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler) });
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IMessageHandler<SimpleMessage>>(typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler));
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleMessage(), CancellationToken.None));

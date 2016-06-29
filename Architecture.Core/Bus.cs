@@ -17,17 +17,20 @@ namespace Architecture.Core
             _handlerFactory = new HandlerFactory(handlerFactory);
         }
 
+        [DebuggerStepThrough, DebuggerHidden]
         public async Task Send(IMessage message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
             var handlers = _handlerFactory.CreateMessageHandlers(messageType);
             foreach(var handler in handlers)
             {
+                InjectHandler(handler);
                 var wrapper = WrapMessageHandler(messageType, handler);
                 await wrapper.Handle(message, cancellationToken);
             }
         }
 
+        [DebuggerStepThrough, DebuggerHidden]
         public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
             var requestType = request.GetType();
@@ -36,6 +39,7 @@ namespace Architecture.Core
             {
                 throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType());
             }
+            InjectHandler(handler);
             var wrapper = WrapRequestHandler<TResponse>(requestType, handler);
             return await wrapper.Handle(request, cancellationToken);
         }
@@ -50,6 +54,19 @@ namespace Architecture.Core
         {
             var wrapperType = typeof(RequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
             return (RequestHandler<TResponse>)Activator.CreateInstance(wrapperType, handler);
+        }
+
+        private void InjectHandler(object handler)
+        {
+            if (typeof(Handler).IsAssignableFrom(handler.GetType()))
+            {
+                InjectHandler((Handler)handler);
+            }
+        }
+
+        private void InjectHandler(Handler handler)
+        {
+            handler.Bus = this;
         }
 
         private abstract class MessageHandler

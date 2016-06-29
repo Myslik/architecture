@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="BusSendMessageTests.cs" />
     <Compile Include="BusSendRequestTests.cs" />
+    <Compile Include="BusSendMessageChainTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleHandlerFactory.cs" />
   </ItemGroup>

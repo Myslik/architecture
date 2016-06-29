@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bus.cs" />
+    <Compile Include="Handler.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandlerFactory.cs" />
     <Compile Include="IMessage.cs" />

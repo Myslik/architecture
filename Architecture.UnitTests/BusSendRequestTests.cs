@@ -11,9 +11,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
-                typeof(SimpleRequestHandler));
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IRequestHandler<SimpleRequest, SimpleResponse>, SimpleRequestHandler>();
             var bus = new Bus(handlerFactory);
             var response = await bus.Send(new SimpleRequest(), CancellationToken.None);
             Assert.NotNull(response);
@@ -32,9 +31,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendWithFailingHandlerTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
-                typeof(FailingRequestHandler));
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IRequestHandler<SimpleRequest, SimpleResponse>, FailingRequestHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest(), CancellationToken.None));
@@ -43,9 +41,8 @@ namespace Architecture.UnitTests
         [Fact]
         public async void SendWithBadHandlerTest()
         {
-            var handlerFactory = new SimpleHandlerFactory(
-                typeof(IRequestHandler<SimpleRequest, SimpleResponse>),
-                typeof(BadRequestHandler));
+            var handlerFactory = new SimpleHandlerFactory();
+            handlerFactory.Register<IRequestHandler<SimpleRequest, SimpleResponse>, BadRequestHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest(), CancellationToken.None));
