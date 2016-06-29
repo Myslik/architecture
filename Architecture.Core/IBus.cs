@@ -6,7 +6,11 @@ namespace Architecture.Core
     public interface IBus
     {
         Task Send(
-            IMessage message, 
+            IEvent @event, 
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        Task Send(
+            IRequest request,
             CancellationToken cancellationToken = default(CancellationToken));
 
         Task<TResponse> Send<TResponse>(

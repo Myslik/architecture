@@ -6,15 +6,15 @@ using Xunit;
 
 namespace Architecture.UnitTests
 {
-    public class BusSendMessageTests
+    public class BusSendEventTests
     {
         [Fact]
         public async void SendTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IMessageHandler<SimpleMessage>, SimpleMessageHandler>();
+            handlerFactory.Register<IHandleEvent<SimpleEvent>, SimpleEventHandler>();
             var bus = new Bus(handlerFactory);
-            await bus.Send(new SimpleMessage(), CancellationToken.None);
+            await bus.Send(new SimpleEvent(), CancellationToken.None);
         }
 
         [Fact]
@@ -22,67 +22,67 @@ namespace Architecture.UnitTests
         {
             var handlerFactory = new SimpleHandlerFactory();
             var bus = new Bus(handlerFactory);
-            await bus.Send(new SimpleMessage(), CancellationToken.None);
+            await bus.Send(new SimpleEvent(), CancellationToken.None);
         }
 
         [Fact]
         public async void SendWithMultipleHandlersTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IMessageHandler<SimpleMessage>>(typeof(SimpleMessageHandler), typeof(AnotherMessageHandler));
+            handlerFactory.Register<IHandleEvent<SimpleEvent>>(typeof(SimpleEventHandler), typeof(AnotherEventHandler));
             var bus = new Bus(handlerFactory);
-            await bus.Send(new SimpleMessage(), CancellationToken.None);
+            await bus.Send(new SimpleEvent(), CancellationToken.None);
         }
 
         [Fact]
         public async void SendWithFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IMessageHandler<SimpleMessage>, FailingMessageHandler>();
+            handlerFactory.Register<IHandleEvent<SimpleEvent>, FailingEventHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
-                () => bus.Send(new SimpleMessage(), CancellationToken.None));
+                () => bus.Send(new SimpleEvent(), CancellationToken.None));
         }
 
         [Fact]
         public async void SendWithMultipleFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IMessageHandler<SimpleMessage>>(typeof(FailingMessageHandler), typeof(AnotherFailingMessageHandler));
+            handlerFactory.Register<IHandleEvent<SimpleEvent>>(typeof(FailingEventHandler), typeof(AnotherFailingEventHandler));
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
-                () => bus.Send(new SimpleMessage(), CancellationToken.None));
+                () => bus.Send(new SimpleEvent(), CancellationToken.None));
         }
 
-        private class SimpleMessage : IMessage { }
+        private class SimpleEvent : IEvent { }
 
-        private class SimpleMessageHandler : IMessageHandler<SimpleMessage>
+        private class SimpleEventHandler : IHandleEvent<SimpleEvent>
         {
-            public Task Handle(SimpleMessage message, CancellationToken cancellationToken)
+            public Task Handle(SimpleEvent message, CancellationToken cancellationToken)
             {
                 return Task.FromResult(0);
             }
         }
 
-        private class AnotherMessageHandler : IMessageHandler<SimpleMessage>
+        private class AnotherEventHandler : IHandleEvent<SimpleEvent>
         {
-            public Task Handle(SimpleMessage message, CancellationToken cancellationToken)
+            public Task Handle(SimpleEvent message, CancellationToken cancellationToken)
             {
                 return Task.FromResult(0);
             }
         }
 
-        private class FailingMessageHandler: IMessageHandler<SimpleMessage>
+        private class FailingEventHandler: IHandleEvent<SimpleEvent>
         {
-            public Task Handle(SimpleMessage message, CancellationToken cancellationToken)
+            public Task Handle(SimpleEvent message, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
         }
 
-        private class AnotherFailingMessageHandler : IMessageHandler<SimpleMessage>
+        private class AnotherFailingEventHandler : IHandleEvent<SimpleEvent>
         {
-            public Task Handle(SimpleMessage message, CancellationToken cancellationToken)
+            public Task Handle(SimpleEvent message, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }

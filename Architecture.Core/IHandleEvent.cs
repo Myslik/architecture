@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace Architecture.Core
 {
-    public interface IMessageHandler<in TMessage>
-        where TMessage : IMessage
+    public interface IHandleEvent<in TEvent>
+        where TEvent : IEvent
     {
         Task Handle(
-            TMessage message, 
+            TEvent message, 
             CancellationToken cancellationToken = default(CancellationToken));
     }
 }

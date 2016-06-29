@@ -38,16 +38,23 @@ namespace Architecture.Core
             }
 
             [DebuggerStepThrough, DebuggerHidden]
-            public IEnumerable<object> CreateMessageHandlers(Type messageType)
+            public IEnumerable<object> CreateEventHandlers(Type eventType)
             {
-                var serviceType = typeof(IMessageHandler<>).MakeGenericType(messageType);
+                var serviceType = typeof(IHandleEvent<>).MakeGenericType(eventType);
                 return _handlerFactory.CreateMany(serviceType);
+            }
+
+            [DebuggerStepThrough, DebuggerHidden]
+            public object CreateRequestHandler(Type requestType)
+            {
+                var serviceType = typeof(IHandleRequest<>).MakeGenericType(requestType);
+                return _handlerFactory.Create(serviceType);
             }
 
             [DebuggerStepThrough, DebuggerHidden]
             public object CreateRequestHandler<TResponse>(Type requestType)
             {
-                var serviceType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+                var serviceType = typeof(IHandleRequest<,>).MakeGenericType(requestType, typeof(TResponse));
                 return _handlerFactory.Create(serviceType);
             }
         }

@@ -43,7 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bus.cs" />
-    <Compile Include="Bus.Messages.cs">
+    <Compile Include="Bus.Events.cs">
       <DependentUpon>Bus.cs</DependentUpon>
     </Compile>
     <Compile Include="Bus.Requests.cs">
@@ -51,11 +51,12 @@
     </Compile>
     <Compile Include="Handler.cs" />
     <Compile Include="IBus.cs" />
+    <Compile Include="IEvent.cs" />
     <Compile Include="IHandlerFactory.cs" />
     <Compile Include="IMessage.cs" />
-    <Compile Include="IMessageHandler.cs" />
+    <Compile Include="IHandleEvent.cs" />
     <Compile Include="IRequest.cs" />
-    <Compile Include="IRequestHandler.cs" />
+    <Compile Include="IHandleRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

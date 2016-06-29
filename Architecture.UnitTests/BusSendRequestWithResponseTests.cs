@@ -6,15 +6,17 @@ using Xunit;
 
 namespace Architecture.UnitTests
 {
-    public class BusSendRequestTests
+    public class BusSendRequestWithResponseTests
     {
         [Fact]
         public async void SendTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IHandleRequest<SimpleRequest>, SimpleRequestHandler>();
+            handlerFactory.Register<IHandleRequest<SimpleRequest, SimpleResponse>, SimpleRequestHandler>();
             var bus = new Bus(handlerFactory);
-            await bus.Send(new SimpleRequest(), CancellationToken.None);
+            var response = await bus.Send(new SimpleRequest(), CancellationToken.None);
+            Assert.NotNull(response);
+            Assert.IsType<SimpleResponse>(response);
         }
 
         [Fact]
@@ -30,7 +32,7 @@ namespace Architecture.UnitTests
         public async void SendWithFailingHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IHandleRequest<SimpleRequest>, FailingRequestHandler>();
+            handlerFactory.Register<IHandleRequest<SimpleRequest, SimpleResponse>, FailingRequestHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest(), CancellationToken.None));
@@ -40,22 +42,24 @@ namespace Architecture.UnitTests
         public async void SendWithBadHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();
-            handlerFactory.Register<IHandleRequest<SimpleRequest>, BadRequestHandler>();
+            handlerFactory.Register<IHandleRequest<SimpleRequest, SimpleResponse>, BadRequestHandler>();
             var bus = new Bus(handlerFactory);
             await Assert.ThrowsAsync<NotImplementedException>(
                 () => bus.Send(new SimpleRequest(), CancellationToken.None));
         }
 
-        private class RequestWithoutHandler : IRequest { }
+        private class RequestWithoutHandler : IRequest<SimpleResponse> { }
 
-        private class SimpleRequest : IRequest { }
+        private class SimpleResponse { }
 
-        private class SimpleRequestHandler :
-            IHandleRequest<SimpleRequest>
+        private class SimpleRequest : IRequest<SimpleResponse> { }
+
+        private class SimpleRequestHandler : 
+            IHandleRequest<SimpleRequest, SimpleResponse>
         {
-            public Task Handle(SimpleRequest request, CancellationToken cancellationToken)
+            public Task<SimpleResponse> Handle(SimpleRequest request, CancellationToken cancellationToken)
             {
-                return Task.FromResult(0);
+                return Task.FromResult(new SimpleResponse());
             }
         }
 
@@ -67,10 +71,10 @@ namespace Architecture.UnitTests
             }
         }
 
-        private class FailingRequestHandler :
-            IHandleRequest<SimpleRequest>
+        private class FailingRequestHandler:
+            IHandleRequest<SimpleRequest, SimpleResponse>
         {
-            public Task Handle(SimpleRequest request, CancellationToken cancellationToken)
+            public Task<SimpleResponse> Handle(SimpleRequest request, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
