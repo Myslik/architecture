@@ -10,6 +10,7 @@ namespace Architecture.Core
         [DebuggerStepThrough, DebuggerHidden]
         public virtual async Task Send(IRequest request, CancellationToken cancellationToken)
         {
+            Guard.AgainstNull(nameof(request), request);
             var requestType = request.GetType();
             var handler = _handlerFactory.CreateRequestHandler(requestType);
             if (handler == null)
@@ -24,6 +25,7 @@ namespace Architecture.Core
         [DebuggerStepThrough, DebuggerHidden]
         public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
+            Guard.AgainstNull(nameof(request), request);
             var requestType = request.GetType();
             var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
             if (handler == null)

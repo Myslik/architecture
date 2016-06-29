@@ -49,6 +49,7 @@
     <Compile Include="Bus.Requests.cs">
       <DependentUpon>Bus.cs</DependentUpon>
     </Compile>
+    <Compile Include="Guard.cs" />
     <Compile Include="Handler.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IEvent.cs" />

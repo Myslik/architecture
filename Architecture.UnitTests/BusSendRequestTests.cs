@@ -18,6 +18,16 @@ namespace Architecture.UnitTests
         }
 
         [Fact]
+        public async void SendNullTest()
+        {
+            var handlerFactory = new SimpleHandlerFactory();
+            IBus bus = new Bus(handlerFactory);
+            SimpleRequest request = null;
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                () => bus.Send(request));
+        }
+
+        [Fact]
         public async void SendWithoutHandlerTest()
         {
             var handlerFactory = new SimpleHandlerFactory();

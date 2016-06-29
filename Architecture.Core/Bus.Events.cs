@@ -10,6 +10,7 @@ namespace Architecture.Core
         [DebuggerStepThrough, DebuggerHidden]
         public virtual async Task Send(IEvent @event, CancellationToken cancellationToken)
         {
+            Guard.AgainstNull(nameof(@event), @event);
             var messageType = @event.GetType();
             var handlers = _handlerFactory.CreateEventHandlers(messageType);
             foreach (var handler in handlers)
