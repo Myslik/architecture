@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Architecture.Core
 {
-    public class Bus : IBus
+    public partial class Bus : IBus
     {
         private const string HANDLER_NOT_FOUND =
             "Handler was not found for request of type ";
@@ -15,45 +13,6 @@ namespace Architecture.Core
         public Bus(IHandlerFactory handlerFactory)
         {
             _handlerFactory = new HandlerFactory(handlerFactory);
-        }
-
-        [DebuggerStepThrough, DebuggerHidden]
-        public async Task Send(IMessage message, CancellationToken cancellationToken)
-        {
-            var messageType = message.GetType();
-            var handlers = _handlerFactory.CreateMessageHandlers(messageType);
-            foreach(var handler in handlers)
-            {
-                InjectHandler(handler);
-                var wrapper = WrapMessageHandler(messageType, handler);
-                await wrapper.Handle(message, cancellationToken);
-            }
-        }
-
-        [DebuggerStepThrough, DebuggerHidden]
-        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
-        {
-            var requestType = request.GetType();
-            var handler = _handlerFactory.CreateRequestHandler<TResponse>(requestType);
-            if (handler == null)
-            {
-                throw new InvalidOperationException(HANDLER_NOT_FOUND + request.GetType());
-            }
-            InjectHandler(handler);
-            var wrapper = WrapRequestHandler<TResponse>(requestType, handler);
-            return await wrapper.Handle(request, cancellationToken);
-        }
-
-        private static MessageHandler WrapMessageHandler(Type messageType, object handler)
-        {
-            var wrapperType = typeof(MessageHandler<>).MakeGenericType(messageType);
-            return (MessageHandler)Activator.CreateInstance(wrapperType, handler);
-        }
-
-        private static RequestHandler<TResponse> WrapRequestHandler<TResponse>(Type requestType, object handler)
-        {
-            var wrapperType = typeof(RequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
-            return (RequestHandler<TResponse>)Activator.CreateInstance(wrapperType, handler);
         }
 
         private void InjectHandler(object handler)
@@ -67,50 +26,6 @@ namespace Architecture.Core
         private void InjectHandler(Handler handler)
         {
             handler.Bus = this;
-        }
-
-        private abstract class MessageHandler
-        {
-            public abstract Task Handle(IMessage message, CancellationToken cancellationToken);
-        }
-
-        private sealed class MessageHandler<TMessage> : MessageHandler
-            where TMessage : IMessage
-        {
-            private readonly IMessageHandler<TMessage> _inner;
-
-            public MessageHandler(IMessageHandler<TMessage> inner)
-            {
-                _inner = inner;
-            }
-
-            [DebuggerStepThrough, DebuggerHidden]
-            public override async Task Handle(IMessage message, CancellationToken cancellationToken)
-            {
-                await _inner.Handle((TMessage)message, cancellationToken);
-            }
-        }
-
-        private abstract class RequestHandler<TResponse>
-        {
-            public abstract Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken);
-        }
-
-        private sealed class RequestHandler<TRequest, TResponse> : RequestHandler<TResponse>
-            where TRequest : IRequest<TResponse>
-        {
-            private readonly IRequestHandler<TRequest, TResponse> _inner;
-
-            public RequestHandler(IRequestHandler<TRequest, TResponse> inner)
-            {
-                _inner = inner;
-            }
-
-            [DebuggerStepThrough, DebuggerHidden]
-            public override async Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken)
-            {
-                return await _inner.Handle((TRequest)request, cancellationToken);
-            }
         }
 
         private sealed class HandlerFactory

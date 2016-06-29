@@ -43,6 +43,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bus.cs" />
+    <Compile Include="Bus.Messages.cs">
+      <DependentUpon>Bus.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Bus.Requests.cs">
+      <DependentUpon>Bus.cs</DependentUpon>
+    </Compile>
     <Compile Include="Handler.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandlerFactory.cs" />

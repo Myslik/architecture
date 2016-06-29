@@ -1,6 +1,10 @@
 ﻿namespace Architecture.Core
 {
-    public interface IRequest<out TResponse>
+    public interface IRequest
+    {
+    }
+
+    public interface IRequest<out TResponse> : IRequest
     {
     }
 }
